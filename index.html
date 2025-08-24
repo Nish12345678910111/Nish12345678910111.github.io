@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text ↔ Number Converter with Download</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  input, textarea, button { display: block; margin: 10px 0; width: 100%; padding: 10px; font-size: 16px; }
+  textarea { height: 150px; }
+</style>
+</head>
+<body>
+
+<h2>Text ↔ Number Converter</h2>
+
+<input type="file" id="fileInput" accept=".txt">
+<textarea id="inputText" placeholder="Text from file or type here..."></textarea>
+
+<button id="textToNumBtn">Convert Text → Number</button>
+<button id="numToTextBtn">Convert Number → Text</button>
+
+<textarea id="outputText" placeholder="Output will appear here..." readonly></textarea>
+<button id="copyBtn">Copy Output</button>
+<button id="downloadBtn">Download Output as TXT</button>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const inputText = document.getElementById('inputText');
+const outputText = document.getElementById('outputText');
+const textToNumBtn = document.getElementById('textToNumBtn');
+const numToTextBtn = document.getElementById('numToTextBtn');
+const copyBtn = document.getElementById('copyBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+
+// Load text from file
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    inputText.value = e.target.result;
+  };
+  reader.readAsText(file);
+});
+
+// Convert text to large number (100000 → 1000000000000)
+function textToNumber(text) {
+  let result = '';
+  for (let char of text) {
+    let code = char.charCodeAt(0); // Unicode code
+    // Scale to 100000 - 1000000000000
+    let scaled = 100000 + Math.floor((code / 65535) * (1000000000000 - 100000));
+    result += scaled + ' '; // separate numbers by space
+  }
+  return result.trim();
+}
+
+// Convert number back to text
+function numberToText(numStr) {
+  if (!numStr) return '';
+  let result = '';
+  let nums = numStr.trim().split(/\s+/); // split by space
+  for (let n of nums) {
+    let code = parseInt(n);
+    if (!isNaN(code)) {
+      // reverse scaling
+      let charCode = Math.round(((code - 100000) / (1000000000000 - 100000)) * 65535);
+      result += String.fromCharCode(charCode);
+    }
+  }
+  return result;
+}
+
+// Button events
+textToNumBtn.addEventListener('click', () => {
+  outputText.value = textToNumber(inputText.value);
+});
+
+numToTextBtn.addEventListener('click', () => {
+  outputText.value = numberToText(inputText.value);
+});
+
+// Copy output
+copyBtn.addEventListener('click', () => {
+  outputText.select();
+  document.execCommand('copy');
+  alert('Copied to clipboard!');
+});
+
+// Download output
+downloadBtn.addEventListener('click', () => {
+  const blob = new Blob([outputText.value], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'output.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
